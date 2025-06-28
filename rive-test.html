@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rive Animation Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .canvas-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #fff;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .control-group {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 100px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        input[type="range"] {
+            width: 200px;
+        }
+        .info {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .debug {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rive Animation Test</h1>
+        
+        <div class="info">
+            <strong>Testing:</strong> Loading and displaying the cannon.riv file with interactive controls.
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="riveCanvas" width="400" height="300"></canvas>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="elevationSlider">Elevation:</label>
+                <input type="range" id="elevationSlider" min="-85" max="0" value="-45" step="1">
+                <span id="elevationValue">-45</span>°
+            </div>
+            <div class="control-group">
+                <button id="playBtn">Play Animation</button>
+                <button id="pauseBtn">Pause Animation</button>
+                <button id="resetBtn">Reset Animation</button>
+            </div>
+        </div>
+        
+        <div class="debug" id="debugInfo">
+            Loading Rive animation...
+        </div>
+    </div>
+
+    <!-- Load Rive runtime -->
+    <script src="https://unpkg.com/@rive-app/canvas@2.7.0"></script>
+    
+    <script>
+        let riveInstance = null;
+        let elevationInput = null;
+        
+        const canvas = document.getElementById('riveCanvas');
+        const elevationSlider = document.getElementById('elevationSlider');
+        const elevationValue = document.getElementById('elevationValue');
+        const debugInfo = document.getElementById('debugInfo');
+        
+        function updateDebugInfo(message) {
+            console.log(message);
+            debugInfo.innerHTML += message + '<br>';
+        }
+        
+        function initRiveAnimation() {
+            updateDebugInfo('Initializing Rive animation...');
+            
+            try {
+                riveInstance = new rive.Rive({
+                    src: './Rive.riv', // Make sure Rive.riv is in the same directory
+                    canvas: canvas,
+                    autoplay: true,
+                    stateMachines: 'State Machine 1',
+                    onLoad: () => {
+                        updateDebugInfo('✅ Rive file loaded successfully!');
+                        
+                        // Resize drawing surface to match canvas
+                        riveInstance.resizeDrawingSurfaceToCanvas();
+                        
+                        // Get the elevation input from the state machine
+                        try {
+                            const inputs = riveInstance.stateMachineInputs('State Machine 1');
+                            updateDebugInfo(`Found ${inputs.length} state machine inputs`);
+                            
+                            elevationInput = inputs.find(input => input.name === 'Elevation');
+                            if (elevationInput) {
+                                updateDebugInfo('✅ Found Elevation input!');
+                                updateDebugInfo(`Elevation input type: ${elevationInput.type}`);
+                                updateDebugInfo(`Current elevation value: ${elevationInput.value}`);
+                                
+                                // Set initial elevation
+                                elevationInput.value = -45;
+                                updateDebugInfo('Set initial elevation to -45');
+                            } else {
+                                updateDebugInfo('❌ Elevation input not found');
+                                updateDebugInfo('Available inputs: ' + inputs.map(i => i.name).join(', '));
+                            }
+                        } catch (error) {
+                            updateDebugInfo('❌ Error accessing state machine inputs: ' + error.message);
+                        }
+                    },
+                    onLoadError: (error) => {
+                        updateDebugInfo('❌ Error loading Rive file: ' + error);
+                    },
+                    onPlay: () => {
+                        updateDebugInfo('▶️ Animation started playing');
+                    },
+                    onPause: () => {
+                        updateDebugInfo('⏸️ Animation paused');
+                    },
+                    onStop: () => {
+                        updateDebugInfo('⏹️ Animation stopped');
+                    }
+                });
+            } catch (error) {
+                updateDebugInfo('❌ Error creating Rive instance: ' + error.message);
+            }
+        }
+        
+        // Elevation slider control
+        elevationSlider.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            elevationValue.textContent = value;
+            
+            if (elevationInput) {
+                elevationInput.value = value;
+                updateDebugInfo(`Set elevation to: ${value}°`);
+            } else {
+                updateDebugInfo('❌ Elevation input not available');
+            }
+        });
+        
+        // Control buttons
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (riveInstance) {
+                riveInstance.play();
+                updateDebugInfo('Play button clicked');
+            }
+        });
+        
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (riveInstance) {
+                riveInstance.pause();
+                updateDebugInfo('Pause button clicked');
+            }
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (riveInstance) {
+                riveInstance.reset();
+                updateDebugInfo('Reset button clicked');
+            }
+        });
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            updateDebugInfo('Page loaded, initializing Rive...');
+            initRiveAnimation();
+        });
+        
+        // Handle canvas resize
+        window.addEventListener('resize', () => {
+            if (riveInstance) {
+                riveInstance.resizeDrawingSurfaceToCanvas();
+                updateDebugInfo('Canvas resized');
+            }
+        });
+    </script>
+</body>
+</html>

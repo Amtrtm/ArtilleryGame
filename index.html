@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worms Artillery Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+        
+        canvas {
+            border: 3px solid #00d4ff;
+            border-radius: 10px;
+            background: linear-gradient(180deg, #2c3e50, #34495e);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+        }
+        
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        label {
+            font-weight: bold;
+            color: #00d4ff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        input[type="range"] {
+            width: 150px;
+            height: 6px;
+            border-radius: 3px;
+            background: #34495e;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+        
+        button:hover {
+            background: linear-gradient(45deg, #0099cc, #007399);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .game-info {
+            margin: 15px 0;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+        
+        .player1 { 
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+        
+        .player2 { 
+            color: #4ecdc4;
+            text-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+        }
+        
+        span {
+            color: #e0e0e0;
+            font-weight: bold;
+        }
+        
+        .player-hud {
+            position: absolute;
+            top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .left-hud {
+            left: 20px;
+        }
+        
+        .right-hud {
+            right: 20px;
+        }
+        
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .health-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .health-bar-hud {
+            width: 100px;
+            height: 10px;
+            border-radius: 5px;
+            background: #2c3e50;
+        }
+        
+        .health-fill-hud {
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+            background: linear-gradient(45deg, #ff6b6b, #ff3737);
+        }
+        
+        .hud-stats {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 150px;
+        }
+        
+        .stat-label {
+            font-weight: bold;
+            color: #00d4ff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        
+        .player-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .wind-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        /* Individual button containers within bottom controls */
+        .reset-container,
+        .sound-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .reset-button {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: 2px solid #c0392b;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .reset-button:hover {
+            background: linear-gradient(45deg, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        .reset-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(231, 76, 60, 0.3);
+        }
+        
+        /* Enhanced Fire Button Styling */
+        #fireButton {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            border: 3px solid #ff6b35;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+            margin: 10px;
+        }
+        
+        #fireButton:hover {
+            background: linear-gradient(45deg, #f7931e, #ff6b35);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.6);
+        }
+        
+        #fireButton:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+        
+        #fireButton:disabled {
+            background: #666;
+            border-color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Ensure controls are visible */
+        .controls {
+            position: relative;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        
+        /* HUD Fire Buttons */
+        .hud-fire-button {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            border: 2px solid #ff6b35;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+            margin-top: 15px;
+            width: 100%;
+        }
+        
+        .hud-fire-button:hover {
+            background: linear-gradient(45deg, #f7931e, #ff6b35);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+        }
+        
+        .hud-fire-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(255, 107, 53, 0.4);
+        }
+        
+        .hud-fire-button:disabled {
+            background: #666;
+            border-color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.5;
+        }
+        
+        /* Hide inactive player's fire button */
+        .hud-fire-button.inactive {
+            display: none;
+        }
+        
+        /* Bottom button containers */
+        .bottom-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .sound-button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: 2px solid #3498db;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .sound-button:hover {
+            background: linear-gradient(45deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .sound-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>Worms Artillery Game</h1>
+    
+    <!-- Player HUDs with Fire Buttons -->
+    <div id="player1HUD" class="player-hud left-hud">
+        <div class="hud-header">
+            <h3>🔴 PLAYER 1</h3>
+            <div class="health-display">
+                <div class="health-bar-hud">
+                    <div id="player1HealthHUD" class="health-fill-hud"></div>
+                </div>
+                <span id="player1HealthTextHUD">100 HP</span>
+            </div>
+        </div>
+        <div class="hud-stats">
+            <div class="stat-item">
+                <span class="stat-label">ANGLE:</span>
+                <span id="player1Angle" class="stat-value">45°</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">POWER:</span>
+                <span id="player1Power" class="stat-value">50%</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">HEIGHT:</span>
+                <span id="player1Height" class="stat-value">0m</span>
+            </div>
+        </div>
+        <button id="player1FireButton" class="hud-fire-button">🔥 FIRE</button>
+    </div>
+    
+    <div id="player2HUD" class="player-hud right-hud">
+        <div class="hud-header">
+            <h3>🟢 PLAYER 2</h3>
+            <div class="health-display">
+                <div class="health-bar-hud">
+                    <div id="player2HealthHUD" class="health-fill-hud"></div>
+                </div>
+                <span id="player2HealthTextHUD">100 HP</span>
+            </div>
+        </div>
+        <div class="hud-stats">
+            <div class="stat-item">
+                <span class="stat-label">ANGLE:</span>
+                <span id="player2Angle" class="stat-value">45°</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">POWER:</span>
+                <span id="player2Power" class="stat-value">50%</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">HEIGHT:</span>
+                <span id="player2Height" class="stat-value">0m</span>
+            </div>
+        </div>
+        <button id="player2FireButton" class="hud-fire-button">🔥 FIRE</button>
+    </div>
+
+    <div class="game-info">
+        <div class="player-info">
+            <span id="currentPlayer">Player 1's Turn</span>
+            <span id="gameStatus">Game Active</span>
+        </div>
+        
+        <div class="wind-info">
+            <span>Wind: </span>
+            <span id="windStrength">0</span>
+            <span id="windDirection">→</span>
+        </div>
+    </div>
+    
+    <canvas id="gameCanvas" width="1200" height="600"></canvas>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label for="angleSlider">Angle:</label>
+            <input type="range" id="angleSlider" min="0" max="180" value="45">
+            <span id="angleValue">45°</span>
+        </div>
+        
+        <div class="control-group">
+            <label for="powerSlider">Power:</label>
+            <input type="range" id="powerSlider" min="10" max="100" value="50">
+            <span id="powerValue">50%</span>
+        </div>
+        
+    </div>
+    
+    <!-- Bottom controls for reset and sound -->
+    <div class="bottom-controls">
+        <div class="sound-container">
+            <button id="soundButton" class="sound-button">🔊 SOUND ON</button>
+        </div>
+        <div class="reset-container">
+            <button id="resetButton" class="reset-button">🔄 RESET GAME</button>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/@rive-app/canvas@2.7.0"></script>
+    <script src="game.js?v=2.0"></script>
+    <script>
+        // Initialize and start the game
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing game...');
+            const canvas = document.getElementById('gameCanvas');
+            const game = new ArtilleryGame(canvas);
+            console.log('Game instance created, starting game...');
+            game.startGame();
+        });
+    </script>
+</body>
+</html>
